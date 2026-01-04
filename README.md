@@ -1,2 +1,1 @@
-/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/optim/optimizer/zero_optimizer.py:11: DeprecationWarning: `TorchScript` support for functional optimizers is deprecated and will be removed in a future PyTorch release. Consider using the `torch.compile` optimizer instead.
-  from torch.distributed.optim import \
+from mmcv import Config Traceback (most recent call last): File "<stdin>", line 1, in <module> ImportError: cannot import name 'Config' from 'mmcv' (/home/user/thirdkt/mmcv-2.1.0/mmcv/init.py)
