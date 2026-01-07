@@ -1,16 +1,15 @@
-
-(ActionRecognition) user@user-System-Product-Name:~/projects/mmaction2-main$ python tools/train.py configs/detection/slowfast/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb.py
+(ActionRecognition) user@user-System-Product-Name:~/projects/mmaction2-main$ CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/detection/slowfast/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb.py
 /home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/optim/optimizer/zero_optimizer.py:11: DeprecationWarning: `TorchScript` support for functional optimizers is deprecated and will be removed in a future PyTorch release. Consider using the `torch.compile` optimizer instead.
   from torch.distributed.optim import \
-01/05 10:58:31 - mmengine - INFO -
+01/07 15:42:30 - mmengine - INFO -
 ------------------------------------------------------------
 System environment:
     sys.platform: linux
     Python: 3.10.15 (main, Oct  3 2024, 07:27:34) [GCC 11.2.0]
     CUDA available: True
     MUSA available: False
-    numpy_random_seed: 942388073
-    GPU 0,1,2,3: NVIDIA H100 80GB HBM3
+    numpy_random_seed: 476118177
+    GPU 0: NVIDIA H100 80GB HBM3
     CUDA_HOME: /usr/local/cuda-12.1
     NVCC: Cuda compilation tools, release 12.1, V12.1.66
     GCC: gcc (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0
@@ -38,7 +37,7 @@ Runtime environment:
     cudnn_benchmark: False
     mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
     dist_cfg: {'backend': 'nccl'}
-    seed: 942388073
+    seed: 476118177
     diff_rank_seed: False
     deterministic: False
     Distributed launcher: none
@@ -46,7 +45,7 @@ Runtime environment:
     GPU number: 1
 ------------------------------------------------------------
 
-01/05 10:58:32 - mmengine - INFO - Config:
+01/07 15:42:32 - mmengine - INFO - Config:
 ann_file_train = '/home/user/datasets/ava/annotations/ava_train_v2.1.csv'
 ann_file_val = '/home/user/datasets/ava/annotations/ava_val_v2.1.csv'
 anno_root = '/home/user/datasets/ava/annotations'
@@ -208,6 +207,7 @@ test_dataloader = dict(
         '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv',
         label_file=
         '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
+        num_classes=9,
         pipeline=[
             dict(
                 clip_len=32,
@@ -224,6 +224,7 @@ test_dataloader = dict(
         ],
         proposal_file=
         '/home/user/datasets/ava/annotations/ava_dense_proposals_val.FAIR.recall_93.9.pkl',
+        start_index=1,
         test_mode=True,
         type='AVADataset'),
     num_workers=8,
@@ -246,6 +247,7 @@ train_dataloader = dict(
         '/home/user/datasets/ava/annotations/ava_train_excluded_timestamps_v2.1.csv',
         label_file=
         '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
+        num_classes=9,
         pipeline=[
             dict(clip_len=32, frame_interval=2, type='SampleAVAFrames'),
             dict(io_backend='disk', type='RawFrameDecode'),
@@ -260,6 +262,7 @@ train_dataloader = dict(
         ],
         proposal_file=
         '/home/user/datasets/ava/annotations/ava_dense_proposals_train.FAIR.recall_93.9.pkl',
+        start_index=1,
         type='AVADataset'),
     num_workers=8,
     persistent_workers=True,
@@ -287,6 +290,7 @@ val_dataloader = dict(
         '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv',
         label_file=
         '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
+        num_classes=9,
         pipeline=[
             dict(
                 clip_len=32,
@@ -303,6 +307,7 @@ val_dataloader = dict(
         ],
         proposal_file=
         '/home/user/datasets/ava/annotations/ava_dense_proposals_val.FAIR.recall_93.9.pkl',
+        start_index=1,
         test_mode=True,
         type='AVADataset'),
     num_workers=8,
@@ -334,8 +339,8 @@ visualizer = dict(
     ])
 work_dir = './work_dirs/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb'
 
-01/05 10:58:35 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
-01/05 10:58:35 - mmengine - INFO - Hooks will be executed in the following order:
+01/07 15:42:35 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
+01/07 15:42:35 - mmengine - INFO - Hooks will be executed in the following order:
 before_run:
 (VERY_HIGH   ) RuntimeInfoHook
 (BELOW_NORMAL) LoggerHook
@@ -419,19 +424,22 @@ after_test:
 after_run:
 (BELOW_NORMAL) LoggerHook
  --------------------
-01/05 10:58:37 - mmengine - INFO - 56 out of 56 frames are valid.
-01/05 10:58:37 - mmengine - INFO - 8 out of 8 frames are valid.
-01/05 10:58:39 - mmengine - INFO - load model from: https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth
-01/05 10:58:39 - mmengine - INFO - Loads checkpoint by http backend from path: https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth
-01/05 10:58:39 - mmengine - WARNING - The model and loaded state dict do not match exactly
+01/07 15:42:36 - mmengine - INFO - 57 out of 57 frames are valid.
+01/07 15:42:36 - mmengine - INFO - 8 out of 8 frames are valid.
+01/07 15:42:38 - mmengine - INFO - load model from: https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth
+01/07 15:42:38 - mmengine - INFO - Loads checkpoint by http backend from path: https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth
+01/07 15:42:38 - mmengine - WARNING - The model and loaded state dict do not match exactly
 
 unexpected key in source state_dict: cls_head.fc_cls.weight, cls_head.fc_cls.bias
 
 missing keys in source state_dict: roi_head.bbox_head.fc_cls.weight, roi_head.bbox_head.fc_cls.bias
 
-01/05 10:58:39 - mmengine - WARNING - "FileClient" will be deprecated in future. Please use io functions in https://mmengine.readthedocs.io/en/latest/api/fileio.html#file-io
-01/05 10:58:39 - mmengine - WARNING - "HardDiskBackend" is the alias of "LocalBackend" and the former will be deprecated in future.
-01/05 10:58:39 - mmengine - INFO - Checkpoints will be saved to /home/user/projects/mmaction2-main/work_dirs/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb.
+01/07 15:42:38 - mmengine - WARNING - "FileClient" will be deprecated in future. Please use io functions in https://mmengine.readthedocs.io/en/latest/api/fileio.html#file-io
+01/07 15:42:38 - mmengine - WARNING - "HardDiskBackend" is the alias of "LocalBackend" and the former will be deprecated in future.
+01/07 15:42:38 - mmengine - INFO - Checkpoints will be saved to /home/user/projects/mmaction2-main/work_dirs/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb.
+01/07 15:42:40 - mmengine - INFO - Exp name: slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb_20260107_154229
+01/07 15:42:40 - mmengine - INFO - Epoch(train)  [1][4/4]  lr: 2.0000e-02  eta: 0:00:44  time: 0.5898  data_time: 0.1701  memory: 18417  grad_norm: 8.3991  loss: 0.8249  recall@thr=0.5: 0.3889  prec@thr=0.5: 0.3889  recall@top3: 0.7778  prec@top3: 0.2593  recall@top5: 0.8333  prec@top5: 0.1667  loss_action_cls: 0.8249
+01/07 15:42:40 - mmengine - INFO - Saving checkpoint at 1 epochs
 Traceback (most recent call last):
   File "/home/user/projects/mmaction2-main/tools/train.py", line 143, in <module>
     main()
@@ -439,38 +447,18 @@ Traceback (most recent call last):
     runner.train()
   File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/runner.py", line 1777, in train
     model = self.train_loop.run()  # type: ignore
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 98, in run
-    self.run_epoch()
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 114, in run_epoch
-    for idx, data_batch in enumerate(self.dataloader):
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 630, in __next__
-    data = self._next_data()
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1344, in _next_data
-    return self._process_data(data)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1370, in _process_data
-    data.reraise()
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/_utils.py", line 706, in reraise
-    raise exception
-FileNotFoundError: Caught FileNotFoundError in DataLoader worker process 0.
-Original Traceback (most recent call last):
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/data/_utils/worker.py", line 309, in _worker_loop
-    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
-    data = [self.dataset[idx] for idx in possibly_batched_index]
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
-    data = [self.dataset[idx] for idx in possibly_batched_index]
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/dataset/base_dataset.py", line 410, in __getitem__
-    data = self.prepare_data(idx)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/dataset/base_dataset.py", line 793, in prepare_data
-    return self.pipeline(data_info)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/dataset/base_dataset.py", line 60, in __call__
-    data = t(data)
-  File "/home/user/thirdkt/mmcv-2.1.0/mmcv/transforms/base.py", line 12, in __call__
-    return self.transform(results)
-  File "/home/user/projects/mmaction2-main/mmaction/datasets/transforms/loading.py", line 1429, in transform
-    img_bytes = self.file_client.get(filepath)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/fileio/file_client.py", line 301, in get
-    return self.client.get(filepath)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/fileio/backends/local_backend.py", line 33, in get
-    with open(filepath, 'rb') as f:
-FileNotFoundError: [Errno 2] No such file or directory: '/home/user/datasets/ava/rawframes/1/img_05399.jpg'
+  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 105, in run
+    self.runner.val_loop.run()
+  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 379, in run
+    self.run_iter(idx, data_batch)
+  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 408, in run_iter
+    self.evaluator.process(data_samples=outputs, data_batch=data_batch)
+  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/evaluator/evaluator.py", line 60, in process
+    metric.process(data_batch, _data_samples)
+  File "/home/user/projects/mmaction2-main/mmaction/evaluation/metrics/ava_metric.py", line 57, in process
+    outputs = bbox2result(
+  File "/home/user/projects/mmaction2-main/mmaction/structures/bbox/transforms.py", line 48, in bbox2result
+    assert scores.shape[1] == num_classes
+AssertionError
