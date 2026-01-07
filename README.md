@@ -1,464 +1,174 @@
-(ActionRecognition) user@user-System-Product-Name:~/projects/mmaction2-main$ CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/detection/slowfast/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb.py
-/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/optim/optimizer/zero_optimizer.py:11: DeprecationWarning: `TorchScript` support for functional optimizers is deprecated and will be removed in a future PyTorch release. Consider using the `torch.compile` optimizer instead.
-  from torch.distributed.optim import \
-01/07 15:42:30 - mmengine - INFO -
-------------------------------------------------------------
-System environment:
-    sys.platform: linux
-    Python: 3.10.15 (main, Oct  3 2024, 07:27:34) [GCC 11.2.0]
-    CUDA available: True
-    MUSA available: False
-    numpy_random_seed: 476118177
-    GPU 0: NVIDIA H100 80GB HBM3
-    CUDA_HOME: /usr/local/cuda-12.1
-    NVCC: Cuda compilation tools, release 12.1, V12.1.66
-    GCC: gcc (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0
-    PyTorch: 2.4.1+cu121
-    PyTorch compiling details: PyTorch built with:
-  - GCC 9.3
-  - C++ Version: 201703
-  - Intel(R) oneAPI Math Kernel Library Version 2022.2-Product Build 20220804 for Intel(R) 64 architecture applications
-  - Intel(R) MKL-DNN v3.4.2 (Git Hash 1137e04ec0b5251ca2b4400a4fd3c667ce843d67)
-  - OpenMP 201511 (a.k.a. OpenMP 4.5)
-  - LAPACK is enabled (usually provided by MKL)
-  - NNPACK is enabled
-  - CPU capability usage: AVX512
-  - CUDA Runtime 12.1
-  - NVCC architecture flags: -gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_90,code=sm_90
-  - CuDNN 90.1  (built against CUDA 12.4)
-  - Magma 2.6.1
-  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=12.1, CUDNN_VERSION=9.1.0, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -D_GLIBCXX_USE_CXX11_ABI=0 -fabi-version=11 -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DUSE_FBGEMM -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wsuggest-override -Wno-psabi -Wno-error=pedantic -Wno-error=old-style-cast -Wno-missing-braces -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=2.4.1, USE_CUDA=ON, USE_CUDNN=ON, USE_CUSPARSELT=1, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_GLOO=ON, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, USE_ROCM_KERNEL_ASSERT=OFF,
+_base_ = '../../_base_/default_runtime.py'
 
-    TorchVision: 0.19.1+cu121
-    OpenCV: 4.12.0
-    MMEngine: 0.10.7
+url = ('https://download.openmmlab.com/mmaction/recognition/slowfast/'
+       'slowfast_r50_4x16x1_256e_kinetics400_rgb/'
+       'slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth')
 
-Runtime environment:
-    cudnn_benchmark: False
-    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
-    dist_cfg: {'backend': 'nccl'}
-    seed: 476118177
-    diff_rank_seed: False
-    deterministic: False
-    Distributed launcher: none
-    Distributed training: False
-    GPU number: 1
-------------------------------------------------------------
-
-01/07 15:42:32 - mmengine - INFO - Config:
-ann_file_train = '/home/user/datasets/ava/annotations/ava_train_v2.1.csv'
-ann_file_val = '/home/user/datasets/ava/annotations/ava_val_v2.1.csv'
-anno_root = '/home/user/datasets/ava/annotations'
-auto_scale_lr = dict(base_batch_size=128, enable=False)
-data_root = '/home/user/datasets/ava/rawframes'
-dataset_type = 'AVADataset'
-default_hooks = dict(
-    checkpoint=dict(interval=1, save_best='auto', type='CheckpointHook'),
-    logger=dict(ignore_last=False, interval=20, type='LoggerHook'),
-    param_scheduler=dict(type='ParamSchedulerHook'),
-    runtime_info=dict(type='RuntimeInfoHook'),
-    sampler_seed=dict(type='DistSamplerSeedHook'),
-    sync_buffers=dict(type='SyncBuffersHook'),
-    timer=dict(type='IterTimerHook'))
-default_scope = 'mmaction'
-env_cfg = dict(
-    cudnn_benchmark=False,
-    dist_cfg=dict(backend='nccl'),
-    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0))
-exclude_file_train = '/home/user/datasets/ava/annotations/ava_train_excluded_timestamps_v2.1.csv'
-exclude_file_val = '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv'
-file_client_args = dict(io_backend='disk')
-label_file = '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt'
-launcher = 'none'
-load_from = None
-log_level = 'INFO'
-log_processor = dict(by_epoch=True, type='LogProcessor', window_size=20)
 model = dict(
+    type='FastRCNN',
     _scope_='mmdet',
+    init_cfg=dict(type='Pretrained', checkpoint=url),
     backbone=dict(
-        channel_ratio=8,
-        fast_pathway=dict(
-            base_channels=8,
-            conv1_kernel=(
-                5,
-                7,
-                7,
-            ),
-            conv1_stride_t=1,
-            depth=50,
-            lateral=False,
-            pool1_stride_t=1,
-            pretrained=None,
-            spatial_strides=(
-                1,
-                2,
-                2,
-                1,
-            ),
-            type='resnet3d'),
+        type='mmaction.ResNet3dSlowFast',
         pretrained=None,
         resample_rate=8,
-        slow_pathway=dict(
-            conv1_kernel=(
-                1,
-                7,
-                7,
-            ),
-            conv1_stride_t=1,
-            depth=50,
-            dilations=(
-                1,
-                1,
-                1,
-                1,
-            ),
-            inflate=(
-                0,
-                0,
-                1,
-                1,
-            ),
-            lateral=True,
-            pool1_stride_t=1,
-            pretrained=None,
-            spatial_strides=(
-                1,
-                2,
-                2,
-                1,
-            ),
-            type='resnet3d'),
         speed_ratio=8,
-        type='mmaction.ResNet3dSlowFast'),
-    data_preprocessor=dict(
-        format_shape='NCTHW',
-        mean=[
-            123.675,
-            116.28,
-            103.53,
-        ],
-        std=[
-            58.395,
-            57.12,
-            57.375,
-        ],
-        type='mmaction.ActionDataPreprocessor'),
-    init_cfg=dict(
-        checkpoint=
-        'https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth',
-        type='Pretrained'),
+        channel_ratio=8,
+        slow_pathway=dict(
+            type='resnet3d',
+            depth=50,
+            pretrained=None,
+            lateral=True,
+            conv1_kernel=(1, 7, 7),
+            dilations=(1, 1, 1, 1),
+            conv1_stride_t=1,
+            pool1_stride_t=1,
+            inflate=(0, 0, 1, 1),
+            spatial_strides=(1, 2, 2, 1)),
+        fast_pathway=dict(
+            type='resnet3d',
+            depth=50,
+            pretrained=None,
+            lateral=False,
+            base_channels=8,
+            conv1_kernel=(5, 7, 7),
+            conv1_stride_t=1,
+            pool1_stride_t=1,
+            spatial_strides=(1, 2, 2, 1))),
     roi_head=dict(
-        bbox_head=dict(
-            background_class=True,
-            dropout_ratio=0.5,
-            in_channels=2304,
-            multilabel=True,
-            num_classes=9,
-            type='BBoxHeadAVA'),
+        type='AVARoIHead',
         bbox_roi_extractor=dict(
-            output_size=8,
-            roi_layer_type='RoIAlign',
             type='SingleRoIExtractor3D',
+            roi_layer_type='RoIAlign',
+            output_size=8,
             with_temporal_pool=True),
-        type='AVARoIHead'),
-    test_cfg=dict(rcnn=None),
+        bbox_head=dict(
+            type='BBoxHeadAVA',
+            background_class=True,
+            in_channels=2304,
+            num_classes=9,
+            multilabel=True,
+            dropout_ratio=0.5)),
+    data_preprocessor=dict(
+        type='mmaction.ActionDataPreprocessor',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        format_shape='NCTHW'),
     train_cfg=dict(
         rcnn=dict(
             assigner=dict(
-                min_pos_iou=0.9,
-                neg_iou_thr=0.9,
+                type='MaxIoUAssignerAVA',
                 pos_iou_thr=0.9,
-                type='MaxIoUAssignerAVA'),
-            pos_weight=1.0,
+                neg_iou_thr=0.9,
+                min_pos_iou=0.9),
             sampler=dict(
-                add_gt_as_proposals=True,
-                neg_pos_ub=-1,
+                type='RandomSampler',
                 num=32,
                 pos_fraction=1,
-                type='RandomSampler'))),
-    type='FastRCNN')
-optim_wrapper = dict(
-    clip_grad=dict(max_norm=40, norm_type=2),
-    optimizer=dict(lr=0.2, momentum=0.9, type='SGD', weight_decay=1e-05))
-param_scheduler = [
-    dict(begin=0, by_epoch=True, end=5, start_factor=0.1, type='LinearLR'),
-    dict(
-        begin=0,
-        by_epoch=True,
-        end=20,
-        gamma=0.1,
-        milestones=[
-            10,
-            15,
-        ],
-        type='MultiStepLR'),
-]
-proposal_file_train = '/home/user/datasets/ava/annotations/ava_dense_proposals_train.FAIR.recall_93.9.pkl'
-proposal_file_val = '/home/user/datasets/ava/annotations/ava_dense_proposals_val.FAIR.recall_93.9.pkl'
-randomness = dict(deterministic=False, diff_rank_seed=False, seed=None)
-resume = False
-test_cfg = dict(type='TestLoop')
-test_dataloader = dict(
-    batch_size=1,
-    dataset=dict(
-        ann_file='/home/user/datasets/ava/annotations/ava_val_v2.1.csv',
-        data_prefix=dict(img='/home/user/datasets/ava/rawframes'),
-        exclude_file=
-        '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv',
-        label_file=
-        '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
-        num_classes=9,
-        pipeline=[
-            dict(
-                clip_len=32,
-                frame_interval=2,
-                test_mode=True,
-                type='SampleAVAFrames'),
-            dict(io_backend='disk', type='RawFrameDecode'),
-            dict(scale=(
-                -1,
-                256,
-            ), type='Resize'),
-            dict(collapse=True, input_format='NCTHW', type='FormatShape'),
-            dict(type='PackActionInputs'),
-        ],
-        proposal_file=
-        '/home/user/datasets/ava/annotations/ava_dense_proposals_val.FAIR.recall_93.9.pkl',
-        start_index=1,
-        test_mode=True,
-        type='AVADataset'),
-    num_workers=8,
-    persistent_workers=True,
-    sampler=dict(shuffle=False, type='DefaultSampler'))
-test_evaluator = dict(
-    ann_file='/home/user/datasets/ava/annotations/ava_val_v2.1.csv',
-    exclude_file=
-    '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv',
-    label_file='/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
-    type='AVAMetric')
-train_cfg = dict(
-    max_epochs=20, type='EpochBasedTrainLoop', val_begin=1, val_interval=1)
-train_dataloader = dict(
-    batch_size=16,
-    dataset=dict(
-        ann_file='/home/user/datasets/ava/annotations/ava_train_v2.1.csv',
-        data_prefix=dict(img='/home/user/datasets/ava/rawframes'),
-        exclude_file=
-        '/home/user/datasets/ava/annotations/ava_train_excluded_timestamps_v2.1.csv',
-        label_file=
-        '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
-        num_classes=9,
-        pipeline=[
-            dict(clip_len=32, frame_interval=2, type='SampleAVAFrames'),
-            dict(io_backend='disk', type='RawFrameDecode'),
-            dict(scale_range=(
-                256,
-                320,
-            ), type='RandomRescale'),
-            dict(size=256, type='RandomCrop'),
-            dict(flip_ratio=0.5, type='Flip'),
-            dict(collapse=True, input_format='NCTHW', type='FormatShape'),
-            dict(type='PackActionInputs'),
-        ],
-        proposal_file=
-        '/home/user/datasets/ava/annotations/ava_dense_proposals_train.FAIR.recall_93.9.pkl',
-        start_index=1,
-        type='AVADataset'),
-    num_workers=8,
-    persistent_workers=True,
-    sampler=dict(shuffle=True, type='DefaultSampler'))
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
+            pos_weight=1.0)),
+    test_cfg=dict(rcnn=None))
+
+dataset_type = 'AVADataset'
+data_root = '/home/user/datasets/ava/rawframes'
+anno_root = '/home/user/datasets/ava/annotations'
+
+ann_file_train = f'{anno_root}/ava_train_v2.1.csv'
+ann_file_val = f'{anno_root}/ava_val_v2.1.csv'
+
+exclude_file_train = f'{anno_root}/ava_train_excluded_timestamps_v2.1.csv'
+exclude_file_val = f'{anno_root}/ava_val_excluded_timestamps_v2.1.csv'
+
+label_file = f'{anno_root}/ava_action_list_v2.1.pbtxt'
+
+proposal_file_train = (f'{anno_root}/ava_dense_proposals_train.FAIR.'
+                       'recall_93.9.pkl')
+proposal_file_val = f'{anno_root}/ava_dense_proposals_val.FAIR.recall_93.9.pkl'
+
+file_client_args = dict(io_backend='disk')
 train_pipeline = [
-    dict(clip_len=32, frame_interval=2, type='SampleAVAFrames'),
-    dict(io_backend='disk', type='RawFrameDecode'),
-    dict(scale_range=(
-        256,
-        320,
-    ), type='RandomRescale'),
-    dict(size=256, type='RandomCrop'),
-    dict(flip_ratio=0.5, type='Flip'),
-    dict(collapse=True, input_format='NCTHW', type='FormatShape'),
-    dict(type='PackActionInputs'),
+    dict(type='SampleAVAFrames', clip_len=32, frame_interval=2),
+    dict(type='RawFrameDecode', **file_client_args),
+    dict(type='RandomRescale', scale_range=(256, 320)),
+    dict(type='RandomCrop', size=256),
+    dict(type='Flip', flip_ratio=0.5),
+    dict(type='FormatShape', input_format='NCTHW', collapse=True),
+    dict(type='PackActionInputs')
 ]
-url = 'https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth'
-val_cfg = dict(type='ValLoop')
-val_dataloader = dict(
-    batch_size=1,
-    dataset=dict(
-        ann_file='/home/user/datasets/ava/annotations/ava_val_v2.1.csv',
-        data_prefix=dict(img='/home/user/datasets/ava/rawframes'),
-        exclude_file=
-        '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv',
-        label_file=
-        '/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
-        num_classes=9,
-        pipeline=[
-            dict(
-                clip_len=32,
-                frame_interval=2,
-                test_mode=True,
-                type='SampleAVAFrames'),
-            dict(io_backend='disk', type='RawFrameDecode'),
-            dict(scale=(
-                -1,
-                256,
-            ), type='Resize'),
-            dict(collapse=True, input_format='NCTHW', type='FormatShape'),
-            dict(type='PackActionInputs'),
-        ],
-        proposal_file=
-        '/home/user/datasets/ava/annotations/ava_dense_proposals_val.FAIR.recall_93.9.pkl',
-        start_index=1,
-        test_mode=True,
-        type='AVADataset'),
-    num_workers=8,
-    persistent_workers=True,
-    sampler=dict(shuffle=False, type='DefaultSampler'))
-val_evaluator = dict(
-    ann_file='/home/user/datasets/ava/annotations/ava_val_v2.1.csv',
-    exclude_file=
-    '/home/user/datasets/ava/annotations/ava_val_excluded_timestamps_v2.1.csv',
-    label_file='/home/user/datasets/ava/annotations/ava_action_list_v2.1.pbtxt',
-    type='AVAMetric')
+
+# The testing is w/o. any cropping / flipping
 val_pipeline = [
     dict(
-        clip_len=32, frame_interval=2, test_mode=True, type='SampleAVAFrames'),
-    dict(io_backend='disk', type='RawFrameDecode'),
-    dict(scale=(
-        -1,
-        256,
-    ), type='Resize'),
-    dict(collapse=True, input_format='NCTHW', type='FormatShape'),
-    dict(type='PackActionInputs'),
+        type='SampleAVAFrames', clip_len=32, frame_interval=2, test_mode=True),
+    dict(type='RawFrameDecode', **file_client_args),
+    dict(type='Resize', scale=(-1, 256)),
+    dict(type='FormatShape', input_format='NCTHW', collapse=True),
+    dict(type='PackActionInputs')
 ]
-vis_backends = [
-    dict(type='LocalVisBackend'),
+
+train_dataloader = dict(
+    batch_size=16,
+    num_workers=8,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    dataset=dict(
+        type=dataset_type,
+        ann_file=ann_file_train,
+        exclude_file=exclude_file_train,
+        pipeline=train_pipeline,
+        label_file=label_file,
+        proposal_file=proposal_file_train,
+        num_classes=9,
+        start_index=1,
+        data_prefix=dict(img=data_root)))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=8,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type=dataset_type,
+        ann_file=ann_file_val,
+        exclude_file=exclude_file_val,
+        pipeline=val_pipeline,
+        label_file=label_file,
+        proposal_file=proposal_file_val,
+        num_classes=9,
+        start_index=1,
+        data_prefix=dict(img=data_root),
+        test_mode=True))
+test_dataloader = val_dataloader
+
+val_evaluator = dict(
+    type='AVAMetric',
+    ann_file=ann_file_val,
+    label_file=label_file,
+    exclude_file=exclude_file_val)
+test_evaluator = val_evaluator
+
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=20, val_begin=1, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+
+param_scheduler = [
+    dict(type='LinearLR', start_factor=0.1, by_epoch=True, begin=0, end=5),
+    dict(
+        type='MultiStepLR',
+        begin=0,
+        end=20,
+        by_epoch=True,
+        milestones=[10, 15],
+        gamma=0.1)
 ]
-visualizer = dict(
-    type='ActionVisualizer', vis_backends=[
-        dict(type='LocalVisBackend'),
-    ])
-work_dir = './work_dirs/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb'
 
-01/07 15:42:35 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
-01/07 15:42:35 - mmengine - INFO - Hooks will be executed in the following order:
-before_run:
-(VERY_HIGH   ) RuntimeInfoHook
-(BELOW_NORMAL) LoggerHook
- --------------------
-before_train:
-(VERY_HIGH   ) RuntimeInfoHook
-(NORMAL      ) IterTimerHook
-(VERY_LOW    ) CheckpointHook
- --------------------
-before_train_epoch:
-(VERY_HIGH   ) RuntimeInfoHook
-(NORMAL      ) IterTimerHook
-(NORMAL      ) DistSamplerSeedHook
- --------------------
-before_train_iter:
-(VERY_HIGH   ) RuntimeInfoHook
-(NORMAL      ) IterTimerHook
- --------------------
-after_train_iter:
-(VERY_HIGH   ) RuntimeInfoHook
-(NORMAL      ) IterTimerHook
-(BELOW_NORMAL) LoggerHook
-(LOW         ) ParamSchedulerHook
-(VERY_LOW    ) CheckpointHook
- --------------------
-after_train_epoch:
-(NORMAL      ) IterTimerHook
-(NORMAL      ) SyncBuffersHook
-(LOW         ) ParamSchedulerHook
-(VERY_LOW    ) CheckpointHook
- --------------------
-before_val:
-(VERY_HIGH   ) RuntimeInfoHook
- --------------------
-before_val_epoch:
-(NORMAL      ) IterTimerHook
-(NORMAL      ) SyncBuffersHook
- --------------------
-before_val_iter:
-(NORMAL      ) IterTimerHook
- --------------------
-after_val_iter:
-(NORMAL      ) IterTimerHook
-(BELOW_NORMAL) LoggerHook
- --------------------
-after_val_epoch:
-(VERY_HIGH   ) RuntimeInfoHook
-(NORMAL      ) IterTimerHook
-(BELOW_NORMAL) LoggerHook
-(LOW         ) ParamSchedulerHook
-(VERY_LOW    ) CheckpointHook
- --------------------
-after_val:
-(VERY_HIGH   ) RuntimeInfoHook
- --------------------
-after_train:
-(VERY_HIGH   ) RuntimeInfoHook
-(VERY_LOW    ) CheckpointHook
- --------------------
-before_test:
-(VERY_HIGH   ) RuntimeInfoHook
- --------------------
-before_test_epoch:
-(NORMAL      ) IterTimerHook
- --------------------
-before_test_iter:
-(NORMAL      ) IterTimerHook
- --------------------
-after_test_iter:
-(NORMAL      ) IterTimerHook
-(BELOW_NORMAL) LoggerHook
- --------------------
-after_test_epoch:
-(VERY_HIGH   ) RuntimeInfoHook
-(NORMAL      ) IterTimerHook
-(BELOW_NORMAL) LoggerHook
- --------------------
-after_test:
-(VERY_HIGH   ) RuntimeInfoHook
- --------------------
-after_run:
-(BELOW_NORMAL) LoggerHook
- --------------------
-01/07 15:42:36 - mmengine - INFO - 57 out of 57 frames are valid.
-01/07 15:42:36 - mmengine - INFO - 8 out of 8 frames are valid.
-01/07 15:42:38 - mmengine - INFO - load model from: https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth
-01/07 15:42:38 - mmengine - INFO - Loads checkpoint by http backend from path: https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_4x16x1_256e_kinetics400_rgb/slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth
-01/07 15:42:38 - mmengine - WARNING - The model and loaded state dict do not match exactly
+optim_wrapper = dict(
+    optimizer=dict(type='SGD', lr=0.2, momentum=0.9, weight_decay=0.00001),
+    clip_grad=dict(max_norm=40, norm_type=2))
 
-unexpected key in source state_dict: cls_head.fc_cls.weight, cls_head.fc_cls.bias
-
-missing keys in source state_dict: roi_head.bbox_head.fc_cls.weight, roi_head.bbox_head.fc_cls.bias
-
-01/07 15:42:38 - mmengine - WARNING - "FileClient" will be deprecated in future. Please use io functions in https://mmengine.readthedocs.io/en/latest/api/fileio.html#file-io
-01/07 15:42:38 - mmengine - WARNING - "HardDiskBackend" is the alias of "LocalBackend" and the former will be deprecated in future.
-01/07 15:42:38 - mmengine - INFO - Checkpoints will be saved to /home/user/projects/mmaction2-main/work_dirs/slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb.
-01/07 15:42:40 - mmengine - INFO - Exp name: slowfast_demo-pretrained-r50_8xb16-4x16x1-20e_ava21-rgb_20260107_154229
-01/07 15:42:40 - mmengine - INFO - Epoch(train)  [1][4/4]  lr: 2.0000e-02  eta: 0:00:44  time: 0.5898  data_time: 0.1701  memory: 18417  grad_norm: 8.3991  loss: 0.8249  recall@thr=0.5: 0.3889  prec@thr=0.5: 0.3889  recall@top3: 0.7778  prec@top3: 0.2593  recall@top5: 0.8333  prec@top5: 0.1667  loss_action_cls: 0.8249
-01/07 15:42:40 - mmengine - INFO - Saving checkpoint at 1 epochs
-Traceback (most recent call last):
-  File "/home/user/projects/mmaction2-main/tools/train.py", line 143, in <module>
-    main()
-  File "/home/user/projects/mmaction2-main/tools/train.py", line 139, in main
-    runner.train()
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/runner.py", line 1777, in train
-    model = self.train_loop.run()  # type: ignore
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 105, in run
-    self.runner.val_loop.run()
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 379, in run
-    self.run_iter(idx, data_batch)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
-    return func(*args, **kwargs)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/runner/loops.py", line 408, in run_iter
-    self.evaluator.process(data_samples=outputs, data_batch=data_batch)
-  File "/home/user/miniforge3/envs/ActionRecognition/lib/python3.10/site-packages/mmengine/evaluator/evaluator.py", line 60, in process
-    metric.process(data_batch, _data_samples)
-  File "/home/user/projects/mmaction2-main/mmaction/evaluation/metrics/ava_metric.py", line 57, in process
-    outputs = bbox2result(
-  File "/home/user/projects/mmaction2-main/mmaction/structures/bbox/transforms.py", line 48, in bbox2result
-    assert scores.shape[1] == num_classes
-AssertionError
+# Default setting for scaling LR automatically
+#   - `enable` means enable scaling LR automatically
+#       or not by default.
+#   - `base_batch_size` = (8 GPUs) x (16 samples per GPU).
+auto_scale_lr = dict(enable=False, base_batch_size=128)
