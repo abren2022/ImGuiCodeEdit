@@ -1,3 +1,17 @@
+. : 无法加载文件 C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1，因为在此系统上禁止运行脚本。有关详细信息，请参
+阅 https:/go.microsoft.com/fwlink/?LinkID=135170 中的 about_Execution_Policies。
+所在位置 行:1 字符: 3
++ . 'C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1'
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) []，PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+. : 无法加载文件 C:\Users\yao.jie10\Documents\WindowsPowerShell\profile.ps1，因为在此系统上禁止运行脚本。有关详细信息，
+请参阅 https:/go.microsoft.com/fwlink/?LinkID=135170 中的 about_Execution_Policies。
+所在位置 行:1 字符: 3
++ . 'C:\Users\yao.jie10\Documents\WindowsPowerShell\profile.ps1'
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) []，PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
 from flask import Flask, render_template, Response, jsonify, url_for, request
 from flask import send_from_directory, abort,send_file
 import random
