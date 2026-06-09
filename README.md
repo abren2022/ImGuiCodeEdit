@@ -1,3 +1,256 @@
+import cv2
+from dataclasses import dataclass, field
+from collections import deque
+import time
+from typing import List, Tuple, Optional, Dict, Any
+from datetime import datetime, timedelta
+import os
+import queue
+import threading
+
+class VideoSaver:
+    """视频保存器，支持多种编码格式和压缩选项"""
+
+    def __init__(self, fps=25, codec='h264'):
+        """
+        Args:
+            fps: 帧率
+            codec: 编码器 ('h264', 'mp4v', 'avc1')
+        """
+        self.fps = fps
+        self.codec_map = {
+            'avc1': cv2.VideoWriter.fourcc(*'avc1'),
+        }
+        self.fourcc = self.codec_map.get(codec, cv2.VideoWriter.fourcc(*'avc1'))
+
+    def save_frames(self, frames, output_path, is_color=True):
+        """保存帧列表为视频"""
+        if not frames:
+            return False
+
+        h, w = frames[0].shape[:2]
+        out = cv2.VideoWriter(output_path, self.fourcc, self.fps, (w, h), is_color)
+
+        for frame in frames:
+            out.write(frame)
+
+        out.release()
+        return True
+
+
+
+class RealtimeRecorder:
+    def __init__(self, buffer_seconds=10, fps=30):
+        self.saver = VideoSaver(fps=fps, codec='mp4v')
+        self.frame_buffer = deque(maxlen=fps * buffer_seconds)  # 环形缓冲区，只保留最近N秒
+        self.timestamps =  time.time()
+        self.is_recording_trigger = False
+        self.save_queue = queue.Queue(maxsize=5)  # 队列限制大小，防止内存爆炸
+        self.is_running = True
+        # 启动后台保存线程
+        self.save_thread = threading.Thread(target=self._background_saver, daemon=True)
+        self.save_thread.start()
+
+    def update(self, frame):
+        """每帧调用"""
+        current_time = time.time()
+        self.frame_buffer.append(frame.copy())  # 必须copy，否则后续帧会覆盖
+        self.timestamps=current_time
+
+    def save_alarm_clip(self, filename_prefix="alarm", save_dir="./alert_videos"):
+        """当触发报警时，保存缓冲区内的视频"""
+        if len(self.frame_buffer) > 0:
+            if not os.path.exists(save_dir):
+                try:
+                    os.makedirs(save_dir)
+                    print(f"创建报警视频目录: {save_dir}")
+                except Exception as e:
+                    print(f"创建目录失败: {e}")
+                    return None
+            # 将deque转换为list
+            frames_list = list(self.frame_buffer)
+            now_str = datetime.fromtimestamp(self.timestamps).strftime("%Y%m%d_%H%M%S")
+            filename = f"{filename_prefix}_{now_str}.mp4"
+            full_path = os.path.join(save_dir, filename)
+            task_data = {
+                'frames': frames_list,
+                'timestamp': now_str,
+                'prefix': filename_prefix,
+                'dir': save_dir
+            }
+            try:
+                self.save_queue.put_nowait(task_data)
+                # print("📹 报警视频保存任务已提交至后台队列")
+                return full_path  # 返回 pending 表示正在后台处理，具体路径由后台生成
+            except queue.Full:
+                print("⚠️ 警告：视频保存队列已满，跳过此次报警视频保存以避免内存溢出")
+                return None
+
+    def _background_saver(self):
+        """后台线程：从队列获取任务并保存视频"""
+        while self.is_running:
+            try:
+                # 阻塞等待任务，timeout防止线程无法退出
+                task = self.save_queue.get(timeout=1)
+
+                frames_list = task['frames']
+                ts = task['timestamp']
+                prefix = task['prefix']
+                save_dir = task['dir']
+
+                # 执行实际的保存操作 (耗时操作在后台进行)
+                self._do_save(frames_list, ts, prefix, save_dir)
+
+                self.save_queue.task_done()
+
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"后台视频保存线程出错: {e}")
+
+    def _do_save(self, frames_list, timestamp, prefix, save_dir):
+        """实际执行保存的逻辑"""
+        if not frames_list:
+            return
+
+        if not os.path.exists(save_dir):
+            try:
+                os.makedirs(save_dir)
+            except Exception as e:
+                print(f"创建目录失败: {e}")
+                return
+
+        now_str = datetime.fromtimestamp(timestamp).strftime("%Y%m%d_%H%M%S")
+        filename = f"{prefix}_{now_str}.mp4"
+        full_path = os.path.join(save_dir, filename)
+
+        try:
+            # 这里调用原有的 saver 逻辑
+            ret = self.saver.save_frames(frames_list,full_path)
+            if ret:
+                print(f"✅ 后台保存完成: {filename}")
+            else:
+                print(f"❌ 后台保存失败: {filename}")
+        except Exception as e:
+            print(f"保存视频文件时发生异常: {e}")
+
+    def stop(self):
+        """停止后台线程"""
+        self.is_running = False
+        if self.save_thread.is_alive():
+            self.save_thread.join()
+
+class AlertTypes:
+    PLACEMENT_ERROR = "placement_error"   # 放置错误
+    TIMEOUT_ERROR = "timeout_error"       # 超时错误
+    MISSING_STEP = "missing_step"         # 工序缺失
+    SEQUENCE_ERROR = "sequence_error"     # 顺序错误
+    WRONG_STEP = "wrong_step"
+
+@dataclass
+class AlertEvent:
+    """单个异常事件记录"""
+    id: int           # 唯一ID
+    timestamp: float  # 发生时间戳 (time.time())
+    alert_type: str   # 异常类型
+    description: str  # 详细描述
+    video_clip_path: Optional[str] = None  # 对应的视频片段路径或内存引用
+    duration: float = 0.0  # 异常持续时长（如果是持续性异常）
+
+    @property
+    def datetime_str(self) -> str:
+        """获取可读的时间字符串"""
+        return datetime.fromtimestamp(self.timestamp).strftime("%Y-%m-%d %H:%M:%S")
+
+
+class AlertManager:
+    """异常数据管理器"""
+
+    def __init__(self, max_history: int = 100):
+        self.alerts: List[AlertEvent] = []
+        self.max_history = max_history
+        self.total_count = 0
+        self.lock = threading.Lock()
+        self.start_time = time.time()
+        # 实时统计缓存
+        self._current_alert_type_counts = {}
+
+
+    def _remove_video_file(self, video_path: Optional[str]):
+        """安全地删除视频文件"""
+        if not video_path:
+            return
+
+        try:
+            if os.path.exists(video_path):
+                os.remove(video_path)
+                print(f"已清理过期报警视频: {video_path}")
+            else:
+                print(f"尝试删除不存在的视频文件: {video_path}")
+        except Exception as e:
+            print(f"删除视频文件失败 {video_path}: {e}")
+
+    def add_alert(self, alert_type: str, description: str,
+                  video_clip_path: Optional[str] = None,) -> AlertEvent:
+        """添加一个新的异常记录"""
+        self.total_count += 1
+        event_id = self.total_count
+
+        new_alert = AlertEvent(
+            id=event_id,
+            timestamp=time.time(),
+            alert_type=alert_type,
+            description=description,
+            video_clip_path=video_clip_path,
+        )
+        with self.lock:
+            self.alerts.append(new_alert)
+
+        # 更新类型计数
+        self._current_alert_type_counts[alert_type] = self._current_alert_type_counts.get(alert_type, 0) + 1
+
+        # 保持历史记录长度限制
+        if len(self.alerts) > self.max_history:
+            oldest_alert = self.alerts[0]
+            removed_video_path = oldest_alert.video_clip_path
+            self.alerts.pop(0)
+            self._remove_video_file(removed_video_path)
+            # 如果移除的是最旧的，可能需要重新计算计数，或者简单起见只保留最近N条的统计
+            # 这里简化处理：只统计最近 max_history 条
+            self._recalculate_stats()
+        return new_alert
+
+    def _recalculate_stats(self):
+        """重新计算最近 max_history 条记录的统计信息"""
+        self._current_alert_type_counts = {}
+        for alert in self.alerts[-self.max_history:]:
+            self._current_alert_type_counts[alert.alert_type] = \
+                self._current_alert_type_counts.get(alert.alert_type, 0) + 1
+
+    def get_statistics(self) -> dict:
+        """获取当前统计摘要"""
+        current_time = time.time()
+        elapsed_time = current_time - self.start_time if current_time > self.start_time else 1
+
+        # 计算异常率 (次/分钟 或 次/小时，根据需求调整)
+        rate_per_minute = (len(self.alerts) / elapsed_time) * 60 if elapsed_time > 0 else 0
+
+        return {
+            'total_count': self.total_count,
+            'recent_count': len(self.alerts),
+            'rate_per_minute': round(rate_per_minute, 2),
+            'type_distribution': self._current_alert_type_counts.copy(),
+            'last_alert_time': self.alerts[-1].datetime_str if self.alerts else None
+        }
+
+    def get_recent_alerts(self, limit: int = 10) -> List[AlertEvent]:
+        """获取最近的异常列表"""
+        with self.lock:
+            return self.alerts[-limit:]
+
+
+
+
 . : 无法加载文件 C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1，因为在此系统上禁止运行脚本。有关详细信息，请参
 阅 https:/go.microsoft.com/fwlink/?LinkID=135170 中的 about_Execution_Policies。
 所在位置 行:1 字符: 3
